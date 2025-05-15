@@ -96,15 +96,6 @@
                     <h1 class="text-3xl font-bold text-purple-600">รายการสิ่งที่ต้องทำ</h1>
                     <p class="text-gray-500">จัดการงานของคุณอย่างมีประสิทธิภาพ</p>
                 </div>
-                <div class="flex items-center space-x-2">
-                    <span class="text-sm font-medium text-gray-500">
-                        <span id="completedTasks">0</span>/<span id="totalTasks">0</span> เสร็จสิ้น
-                    </span>
-                    <div class="w-40 bg-gray-200 rounded-full h-2.5">
-                        <div id="progressBar" class="bg-purple-600 h-2.5 rounded-full" style="width: 0%">
-                        </div>
-                    </div>
-                </div>
             </div>
         </header>
 
@@ -126,27 +117,6 @@
                     <textarea id="description" rows="3"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         placeholder="รายละเอียดเพิ่มเติม..."></textarea>
-                </div>
-
-                <div>
-                    <label class="block text-gray-700 mb-2">ความสำคัญ</label>
-                    <div class="flex gap-4">
-                        <label class="inline-flex items-center">
-                            <input type="radio" name="priority" value="low"
-                                class="text-green-500 focus:ring-green-500">
-                            <span class="ml-2">ต่ำ</span>
-                        </label>
-                        <label class="inline-flex items-center">
-                            <input type="radio" name="priority" value="medium" checked
-                                class="text-yellow-500 focus:ring-yellow-500">
-                            <span class="ml-2">ปานกลาง</span>
-                        </label>
-                        <label class="inline-flex items-center">
-                            <input type="radio" name="priority" value="high"
-                                class="text-red-500 focus:ring-red-500">
-                            <span class="ml-2">สูง</span>
-                        </label>
-                    </div>
                 </div>
 
                 <div class="flex justify-end">
@@ -220,15 +190,6 @@
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"></textarea>
                     </div>
 
-                    <div class="mb-6">
-                        <label class="block text-gray-700 mb-2" for="edit-priority">ความสำคัญ</label>
-                        <select id="edit-priority"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                            <option value="low">ต่ำ</option>
-                            <option value="medium">ปานกลาง</option>
-                            <option value="high">สูง</option>
-                        </select>
-                    </div>
                     <div class="flex justify-end gap-2">
                         <button type="button" id="cancelEditButton"
                             class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors">
@@ -291,7 +252,6 @@
             const editTaskId = document.getElementById('editTaskId');
             const editTitle = document.getElementById('edit-title');
             const editDescription = document.getElementById('edit-description');
-            const editPriority = document.getElementById('edit-priority');
             const cancelEditButton = document.getElementById('cancelEditButton');
             const deleteConfirmModal = document.getElementById('deleteConfirmModal');
             const cancelDeleteButton = document.getElementById('cancelDeleteButton');
@@ -348,7 +308,6 @@
 
                 const title = document.getElementById('title').value;
                 const description = document.getElementById('description').value;
-                const priority = document.querySelector('input[name="priority"]:checked').value;
 
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
@@ -361,8 +320,7 @@
                         },
                         body: JSON.stringify({
                             title: title,
-                            description: description,
-                            priority: priority
+                            description: description
                         })
                     })
                     .then(response => {
@@ -377,7 +335,6 @@
                             created_at: new Date(data.created_at)
                         });
                         addTaskForm.reset();
-                        document.querySelector('input[value="medium"]').checked = true;
                         renderTasks();
                         updateTaskCounters();
                         showSuccess('เพิ่มรายการสำเร็จ');
@@ -430,7 +387,6 @@
                 editTaskId.value = task.id;
                 editTitle.value = task.title;
                 editDescription.value = task.description || '';
-                editPriority.value = task.priority;
 
                 editModal.classList.remove('hidden');
             }
@@ -442,7 +398,6 @@
                 const taskId = editTaskId.value;
                 const title = editTitle.value;
                 const description = editDescription.value;
-                const priority = editPriority.value;
 
                 fetch(`/tasks/${taskId}`, {
                         method: 'PUT',
@@ -453,8 +408,7 @@
                         },
                         body: JSON.stringify({
                             title: title,
-                            description: description,
-                            priority: priority
+                            description: description
                         })
                     })
                     .then(response => {
@@ -469,8 +423,7 @@
                             tasks[taskIndex] = {
                                 ...tasks[taskIndex],
                                 title: title,
-                                description: description,
-                                priority: priority
+                                description: description
                             };
                         }
                         closeEditModal();
@@ -649,10 +602,7 @@
 
                     // Render task items
                     taskList.innerHTML = filteredTasks.map(task => `
-                        <div class="p-4 flex items-center gap-4 transition-colors hover:bg-gray-50
-                            ${task.priority === 'high' ? 'border-l-4 border-red-500' :
-                            task.priority === 'medium' ? 'border-l-4 border-yellow-500' :
-                            'border-l-4 border-green-500'}">
+                        <div class="p-4 flex items-center gap-4 transition-colors hover:bg-gray-50">
                             <!-- Checkbox -->
                             <div>
                                 <input type="checkbox" id="task-${task.id}" 
@@ -671,17 +621,6 @@
                                 </label>
                             </div>
 
-                            <!-- Priority Badge -->
-                            <div>
-                                <span class="px-2 py-1 text-xs font-medium rounded-full
-                                    ${task.priority === 'high' ? 'bg-red-100 text-red-800' :
-                                    task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                                    'bg-green-100 text-green-800'}">
-                                    ${task.priority === 'high' ? 'สูง' : 
-                                      task.priority === 'medium' ? 'ปานกลาง' : 'ต่ำ'}
-                                </span>
-                            </div>
-
                             <!-- Actions -->
                             <div class="flex items-center gap-2">
                                 <button onclick="editTask(${task.id})"
@@ -693,6 +632,7 @@
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
+                        </div>
                     `).join('');
                 }
             }
